@@ -1,3 +1,10 @@
+using System;
+using FisherInsuranceApi.Models;
+
+using Microsoft.AspNetCore.Mvc;
+
+
+
 [Route("api/auto/quotes")]
 
     public class AutoController : Controller 

@@ -1,3 +1,10 @@
+using System;
+using FisherInsuranceApi.Models;
+
+using Microsoft.AspNetCore.Mvc;
+
+
+
 [Route("api/claims/claim")]
 
   public class ClaimsController : Controller 

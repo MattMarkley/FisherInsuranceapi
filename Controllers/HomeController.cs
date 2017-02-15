@@ -1,3 +1,9 @@
+using System;
+using FisherInsuranceApi.Models;
+
+using Microsoft.AspNetCore.Mvc;
+
+
 [Route("api/home/quotes")]
 
    public class HomeController : Controller
