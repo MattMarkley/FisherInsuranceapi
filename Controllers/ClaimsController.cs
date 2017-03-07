@@ -2,6 +2,8 @@ using System;
 using FisherInsuranceApi.Models;
 using FisherInsuranceApi.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Design;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 
 
@@ -9,19 +11,16 @@ using Microsoft.AspNetCore.Mvc;
 
   public class ClaimsController : Controller 
   {
-
-      private IMemoryStore db;
-    
-      public ClaimsController(IMemoryStore repo)
-      {
-          db = repo;
-      }
-
+    private readonly FisherContext db;
+    public ClaimsController(FisherContext context)
+    {
+        db = context;
+    }
 
     [HttpGet]
        public IActionResult GetClaims()
        {
-        return Ok(db.RetrieveAllClaims);
+        return Ok(db.Claims);
 
        }
 
@@ -32,25 +31,34 @@ using Microsoft.AspNetCore.Mvc;
    
         public IActionResult Post([FromBody]Claim claim)
         {
-            return Ok(db.CreateClaim(claim));
+            var newClaim = db.Claims.Add(claim);
+            db.SaveChanges();
+            return CreatedAtRoute("GetClaim", new { id = claim.Id }, claim);
         }
 
     // GET api/claims/claim/5
 
-       [HttpGet("{id}")]
+       [HttpGet("{id}", Name = "GetClaim")]
        
        public IActionResult Get(int id)
        {
-           return Ok(db.RetrieveClaim(id));
+           return Ok(db.Claims.Find(id));
        }
 
     // PUT api/claims/claim/id
 
        [HttpPut("{id}")]
 
-       public IActionResult Put([FromBody] Claim claim)
+       public IActionResult Put(int id, [FromBody] Claim claim)
        {
-           return Ok(db.UpdateClaim(claim));
+           var newClaim = db.Claims.Find(id);
+           if (newClaim == null)
+           {
+               return NotFound();
+           }
+           newClaim = claim;
+           db.SaveChanges();
+           return Ok(newClaim);
        }
 
 
@@ -60,15 +68,15 @@ using Microsoft.AspNetCore.Mvc;
 
        public IActionResult Delete(int id)
        {
-           db.DeleteClaim(id);
-
-           return Ok();
+          var claimToDelete = db.Claims.Find(id);
+          if (claimToDelete == null)
+          {
+              return NotFound();
+          }
+          db.Claims.Remove(claimToDelete);
+          db.SaveChangesAsync();
+          return NoContent();
        }
-
-
-
-
-
 
 
   }

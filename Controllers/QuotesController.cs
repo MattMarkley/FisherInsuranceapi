@@ -2,6 +2,8 @@ using System;
 using FisherInsuranceApi.Models;
 using FisherInsuranceApi.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Design;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 
 
@@ -9,45 +11,50 @@ using Microsoft.AspNetCore.Mvc;
 
     public class QuotesController : Controller 
     {
-
-        private IMemoryStore db;
-
-        public QuotesController(IMemoryStore repo)
+        private readonly FisherContext db;
+        public QuotesController(FisherContext context)
         {
-            db = repo;
+            db = context;
         }
-
-
         // Post api/auto/quotes
 
         [HttpPost]
    
         public IActionResult Post([FromBody] Quote quote)
         {
-            return Ok(db.CreateQuote(quote));
+            var newQuote = db.Quotes.Add(quote);
+            db.SaveChanges();
+            return CreatedAtRoute("GetQuote", new { id = quote.Id }, quote);
         }
         // GET 
         [HttpGet]
         public IActionResult GetQuotes()
         {
-            return Ok(db.RetrieveAllQuotes);
+            return Ok(db.Quotes);
         }
         // GET api/auto/quotes/5
 
-       [HttpGet("{id}")]
+       [HttpGet("{id}", Name = "GetQuote")]
        
        public IActionResult Get(int id)
        {
-           return Ok(db.RetrieveQuote(id));
+           return Ok(db.Quotes.Find(id));
        }
 
        // PUT api/auto/quotes/id
 
        [HttpPut("{id}")]
 
-       public IActionResult Put([FromBody] Quote quote)
+       public IActionResult Put(int id, [FromBody] Quote quote)
        {
-           return Ok(db.UpdateQuote(quote));
+           var newQuote = db.Quotes.Find(id);
+           if (newQuote == null)
+           {
+               return NotFound();
+           }
+           newQuote = quote;
+           db.SaveChanges();
+           return Ok(newQuote);
        }
 
 
@@ -57,9 +64,15 @@ using Microsoft.AspNetCore.Mvc;
 
        public IActionResult Delete(int id)
        {
-           db.DeleteQuote(id);
-
-           return Ok();
+           var quoteToDelete = db.Quotes.Find(id);
+           if (quoteToDelete == null)
+           {
+               return NotFound();
+           }
+           db.Quotes.Remove(quoteToDelete);
+           db.SaveChangesAsync();
+           return NoContent();
+  
        }
 
 
